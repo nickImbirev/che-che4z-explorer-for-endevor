@@ -20,10 +20,8 @@ export class EndevorElementDataProvider implements vscode.TextDocumentContentPro
 
   provideTextDocumentContent(uri: vscode.Uri, _token: vscode.CancellationToken
                                                               ): vscode.ProviderResult<string> {
+
     const uriParts: UriParams = new UriBuilder().fromUri(uri);                                                       
-    return proxyBrowseElement(
-      uriParts.getRepository(),
-      uriParts.getQualifier()
-    );
+    return proxyBrowseElement(uriParts.getRepository(), uriParts.getQualifier());
   }
 }
