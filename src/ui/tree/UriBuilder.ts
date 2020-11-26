@@ -64,7 +64,7 @@ export class UriParams {
     return new UriParams(
       new Repository(
           queryRepo.name, queryRepo.url, queryRepo.username,
-          queryRepo.password, queryRepo.datasource, queryRepo.password
+          queryRepo.password, queryRepo.datasource, queryRepo.profileLabel
       ),
       fullQuery.qualifier
     );
@@ -108,7 +108,7 @@ export class UriParams {
     return this.pathPart;
   }
 
-  getFullQuery(): UriQuery {
+  public getFullQuery(): UriQuery {
     return this.queryPart;
   }
 }
