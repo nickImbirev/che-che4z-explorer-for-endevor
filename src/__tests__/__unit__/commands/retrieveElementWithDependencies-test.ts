@@ -26,6 +26,7 @@ import { EndevorQualifier } from '../../../model/IEndevorQualifier';
 import { Repository } from '../../../model/Repository';
 import { RetrieveElementService } from '../../../service/RetrieveElementService';
 import { EndevorElementNode, EndevorNode } from '../../../ui/tree/EndevorNodes';
+import { UriBuilder } from '../../../ui/tree/UriBuilder';
 
 // Explicitly show NodeJS how to find VSCode (required for Jest)
 process.vscode = vscode;
@@ -45,6 +46,13 @@ describe('Test function retrieveWithDependencies (retrieve element with dependen
   Object.defineProperty(vscode.window, 'withProgress', {
     value: mockWithProgress,
   });
+
+    // mock vscode Uri utility
+    jest.mock('../../../ui/tree/UriBuilder');
+    const expectedUri: any = undefined;
+    const buildUriFunction = jest.fn();
+    UriBuilder.prototype.buildUri = buildUriFunction;
+    buildUriFunction.mockReturnValue(expectedUri);
 
   // Mock the elements, nodes, and repo
   const mockRetrieveElement = jest.fn();
