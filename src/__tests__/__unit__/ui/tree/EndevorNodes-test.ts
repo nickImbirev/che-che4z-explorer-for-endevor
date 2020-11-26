@@ -19,7 +19,7 @@ import { EndevorEntity } from '../../../../model/EndevorEntity';
 import { EndevorQualifier } from '../../../../model/IEndevorQualifier';
 import { Repository } from '../../../../model/Repository';
 import { EndevorElementNode } from '../../../../ui/tree/EndevorNodes';
-import { UriBuilder } from '../../../../ui/tree/UriBuilder';
+import * as uri from '../../../../ui/tree/uri';
 // Explicitly show NodeJS how to find VSCode (required for Jest)
 process.vscode = vscode;
 
@@ -52,14 +52,12 @@ describe('Endevor element nodes use cases', () => {
     type: 'COBOL',
   };
 
-  jest.mock('../../../../ui/tree/UriBuilder');
 
   it('will be created with on-click browse command', () => {
     // given
+  // mock vscode Uri utility
     const expectedUri: any = undefined;
-    const buildUriFunction = jest.fn();
-    UriBuilder.prototype.buildUri = buildUriFunction;
-    buildUriFunction.mockReturnValue(expectedUri);
+    jest.spyOn(uri, 'buildUri').mockReturnValue(expectedUri);
     const elementNode = new EndevorElementNode(endevorEntity, endevorQualifier);
     // when
     const actualOnClickCommand = elementNode.command;

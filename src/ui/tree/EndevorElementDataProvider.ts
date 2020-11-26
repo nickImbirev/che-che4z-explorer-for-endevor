@@ -14,14 +14,14 @@
 
 import * as vscode from 'vscode';
 import { proxyBrowseElement } from '../../service/EndevorCliProxy';
-import { UriBuilder, UriParams } from './UriBuilder';
+import { fromUri, UriParams } from './uri';
 
 export class EndevorElementDataProvider implements vscode.TextDocumentContentProvider {
 
   provideTextDocumentContent(uri: vscode.Uri, _token: vscode.CancellationToken
                                                               ): vscode.ProviderResult<string> {
 
-    const uriParts: UriParams = new UriBuilder().fromUri(uri);                                                       
+    const uriParts: UriParams = fromUri(uri);                                                       
     return proxyBrowseElement(uriParts.getRepository(), uriParts.getQualifier());
   }
 }

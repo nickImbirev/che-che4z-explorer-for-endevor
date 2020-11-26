@@ -17,7 +17,7 @@ import * as vscode from 'vscode';
 import { SCHEMA_NAME } from '../../../../constants';
 import { EndevorQualifier } from '../../../../model/IEndevorQualifier';
 import { Repository } from '../../../../model/Repository';
-import { UriBuilder, UriParams } from '../../../../ui/tree/UriBuilder';
+import { buildUri, fromUri, UriParams } from '../../../../ui/tree/uri';
 // Explicitly show NodeJS how to find VSCode (required for Jest)
 process.vscode = vscode;
 
@@ -56,7 +56,7 @@ describe('vs code uri building features', () => {
             toJSON: jest.fn()
         };
         // when
-        const uriParams: UriParams = new UriBuilder().fromUri(uriMock);
+        const uriParams: UriParams = fromUri(uriMock);
         // then
         const actualQualifier = uriParams.getQualifier();
         assert.equal(actualQualifier.element, elementQualifier.element);
@@ -97,14 +97,12 @@ describe('vs code uri building features', () => {
         parseFunction.mockImplementation(() => {
             return uriMock;
         });
-        Object.defineProperty(vscode.Uri, "parse", {
-            value: parseFunction
-        });
+        vscode.Uri.parse = parseFunction;
         withFunction.mockImplementation(() => {
             return uriMock;
         });
         // when
-        const actualUri: vscode.Uri = new UriBuilder().buildUri(initialParams);
+        const actualUri: vscode.Uri = buildUri(initialParams);
         // then
         const strictCheck = true;
         expect(parseFunction).toHaveBeenCalledWith(SCHEMA_NAME + "://" + endevorHost, strictCheck);

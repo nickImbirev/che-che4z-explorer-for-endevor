@@ -18,21 +18,18 @@ import { SCHEMA_NAME } from '../../constants';
 import { EndevorQualifier } from '../../model/IEndevorQualifier';
 import { Repository } from '../../model/Repository';
 
-export class UriBuilder {
-  
-    public buildUri(uriParams: UriParams): vscode.Uri {
-        return vscode.Uri
-                  .parse(uriParams.getSchema() + "://" + uriParams.getAuthority(), true)
-                  .with({
-                    path: "/" + uriParams.getPathPart(),
-                    query: JSON.stringify(uriParams.getFullQuery())
-                  });
-    }
+export function buildUri(uriParams: UriParams): vscode.Uri {
+  return vscode.Uri
+    .parse(uriParams.getSchema() + "://" + uriParams.getAuthority(), true)
+    .with({
+      path: "/" + uriParams.getPathPart(),
+      query: JSON.stringify(uriParams.getFullQuery())
+    });
+}
     
-    public fromUri(uri: vscode.Uri): UriParams {
-      const queryPart: UriQuery = JSON.parse(uri.query);
-      return UriParams.fromQuery(queryPart);
-    }
+export function fromUri(uri: vscode.Uri): UriParams {
+  const queryPart: UriQuery = JSON.parse(uri.query);
+  return UriParams.fromQuery(queryPart);
 }
 
 export class UriParams {
