@@ -34,6 +34,8 @@ import { Logger } from '@zowe/imperative';
 import * as path from 'path';
 import { Profiles } from './service/Profiles';
 import { logger as vscodeLogger } from './globals';
+import { SCHEMA_NAME } from './constants';
+import { EndevorElementDataProvider } from './ui/tree/EndevorElementDataProvider';
 
 let log: Logger;
 
@@ -163,6 +165,11 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand(Commands.DeleteHost, deleteHost)
   );
+
+  context.subscriptions.push(
+    vscode.workspace.registerTextDocumentContentProvider(SCHEMA_NAME, new EndevorElementDataProvider())
+  );
+
   context.subscriptions.push(
     vscode.commands.registerCommand(Commands.RetrieveElement, (arg: any) => {
       retrieveElement(
