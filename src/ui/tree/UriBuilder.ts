@@ -12,7 +12,9 @@
  *   Broadcom, Inc. - initial API and implementation
  */
 
+import { URL } from 'url';
 import * as vscode from 'vscode';
+import { SCHEMA_NAME } from '../../constants';
 import { EndevorQualifier } from '../../model/IEndevorQualifier';
 import { Repository } from '../../model/Repository';
 
@@ -68,12 +70,15 @@ export class UriParams {
     );
   }
 
-  public static fromScratch(
-    elementRepo: Repository, elementQualifier: EndevorQualifier,
-    schemaName: string, endevorHost: string, elementName: string): UriParams {
-
-    return new UriParams(elementRepo, elementQualifier, schemaName, endevorHost, elementName);
-    }
+  public static fromElement(
+      elementRepo: Repository, elementQualifier: EndevorQualifier
+                                                          ): UriParams {
+      
+    return new UriParams(
+      elementRepo, elementQualifier,
+      SCHEMA_NAME, new URL(elementRepo.getUrl()).host, elementQualifier.element
+    );
+  }
 
   public getRepository(): Repository {
     const queryRepo = this.queryPart.repository;

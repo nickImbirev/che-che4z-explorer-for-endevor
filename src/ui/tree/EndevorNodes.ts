@@ -40,8 +40,6 @@ import { Session } from '@zowe/imperative';
 import { logger } from '../../globals';
 import { Commands } from '../../commands/Common';
 import { UriBuilder, UriParams } from './UriBuilder';
-import { SCHEMA_NAME } from '../../constants';
-import { URL } from 'url';
 
 export class EndevorNode extends vscode.TreeItem {
   private entity?: EndevorEntity;
@@ -380,11 +378,7 @@ export class EndevorElementNode extends EndevorNode {
       title: 'Browse element',
       command: Commands.BrowseElement,
       arguments: [new UriBuilder().buildUri(
-        UriParams.fromScratch(
-            this.getRepository(), this.getQualifier(), 
-            SCHEMA_NAME, new URL(this.getRepository().getUrl()).host,
-            qualifier.element
-            )
+        UriParams.fromElement(this.getRepository(), this.getQualifier())
       )]
     }
   }
