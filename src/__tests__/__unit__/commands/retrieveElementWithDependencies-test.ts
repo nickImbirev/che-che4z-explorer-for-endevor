@@ -47,12 +47,12 @@ describe('Test function retrieveWithDependencies (retrieve element with dependen
     value: mockWithProgress,
   });
 
-    // mock vscode Uri utility
-    jest.mock('../../../ui/tree/UriBuilder');
-    const expectedUri: any = undefined;
-    const buildUriFunction = jest.fn();
-    UriBuilder.prototype.buildUri = buildUriFunction;
-    buildUriFunction.mockReturnValue(expectedUri);
+  // mock vscode Uri utility
+  jest.mock('../../../ui/tree/UriBuilder');
+  const expectedUri: any = undefined;
+  const buildUriFunction = jest.fn();
+  UriBuilder.prototype.buildUri = buildUriFunction;
+  buildUriFunction.mockReturnValue(expectedUri);
 
   // Mock the elements, nodes, and repo
   const mockRetrieveElement = jest.fn();

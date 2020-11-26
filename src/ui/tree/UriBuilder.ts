@@ -27,7 +27,7 @@ export class UriBuilder {
                     path: "/" + uriParams.getPathPart(),
                     query: JSON.stringify(uriParams.getFullQuery())
                   });
-      }
+    }
     
     public fromUri(uri: vscode.Uri): UriParams {
       const queryPart: UriQuery = JSON.parse(uri.query);
