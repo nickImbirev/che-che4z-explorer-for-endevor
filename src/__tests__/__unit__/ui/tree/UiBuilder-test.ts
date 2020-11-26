@@ -14,6 +14,7 @@
 
 import { assert } from 'chai';
 import * as vscode from 'vscode';
+import { SCHEMA_NAME } from '../../../../constants';
 import { EndevorQualifier } from '../../../../model/IEndevorQualifier';
 import { Repository } from '../../../../model/Repository';
 import { UriBuilder, UriParams } from '../../../../ui/tree/UriBuilder';
@@ -22,9 +23,10 @@ process.vscode = vscode;
 
 describe('vs code uri building features', () => {
     // input stubs
+    const endevorHost = "example.com:1234";
     const elementRepo = new Repository(
         'testRepo',
-        'https://example.com:1234',
+        `https://${endevorHost}`,
         'testUser',
         'testPass',
         'testRepo',
@@ -40,14 +42,21 @@ describe('vs code uri building features', () => {
     };
     it('should be parsed from uri to domain object', () => {
         // given
-        const anyUri: vscode.Uri = vscode.Uri.parse('some_value');
         const uriQueryValue = 
                     JSON.stringify(UriParams.fromElement(elementRepo, elementQualifier).getFullQuery());
-        Object.defineProperty(anyUri, "query", {
-            value: uriQueryValue
-        });
+        // here we need to create uri explicitly to avoid strange mock behaviour
+        const uriMock: vscode.Uri = {
+            scheme: '',
+            authority: '',
+            fsPath: '',
+            path: '',
+            query: uriQueryValue,
+            fragment: '',
+            with: jest.fn(),
+            toJSON: jest.fn()
+        };
         // when
-        const uriParams = new UriBuilder().fromUri(anyUri);
+        const uriParams: UriParams = new UriBuilder().fromUri(uriMock);
         // then
         const actualQualifier = uriParams.getQualifier();
         assert.equal(actualQualifier.element, elementQualifier.element);
@@ -67,5 +76,43 @@ describe('vs code uri building features', () => {
         assert.isUndefined(uriParams.getAuthority());
         assert.isUndefined(uriParams.getPathPart());
         assert.isUndefined(uriParams.getSchema());
+    });
+
+    it('should be converted into vs code virtual uri', () => {
+        // given
+        const initialParams: UriParams = UriParams.fromElement(elementRepo, elementQualifier);
+        const withFunction = jest.fn();
+        const parseFunction = jest.fn();
+        // here we need to create uri explicitly to avoid strange mock behaviour
+        const uriMock: vscode.Uri = {
+            scheme: '',
+            authority: '',
+            fsPath: '',
+            path: '',
+            query: '',
+            fragment: '',
+            with: withFunction,
+            toJSON: jest.fn()
+        };
+        parseFunction.mockImplementation(() => {
+            return uriMock;
+        });
+        Object.defineProperty(vscode.Uri, "parse", {
+            value: parseFunction
+        });
+        withFunction.mockImplementation(() => {
+            return uriMock;
+        });
+        // when
+        const actualUri: vscode.Uri = new UriBuilder().buildUri(initialParams);
+        // then
+        const strictCheck = true;
+        expect(parseFunction).toHaveBeenCalledWith(SCHEMA_NAME + "://" + endevorHost, strictCheck);
+        expect(withFunction).toHaveBeenLastCalledWith({
+            path: '/' + elementQualifier.element,
+            query: JSON.stringify(initialParams.getFullQuery())
+        });
+        // ensure, that mock value was returned after 'parse' and 'with' functions
+        assert.equal(uriMock, actualUri);
     });
 });

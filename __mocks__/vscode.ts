@@ -465,14 +465,3 @@ export namespace env {
     },
   };
 }
-
-export class Uri {
-
-  static parse(value: string, strict: boolean | undefined): Uri {
-    return new Uri();
-  }
-
-  with({}): Uri {
-    return this;
-  }
-}
