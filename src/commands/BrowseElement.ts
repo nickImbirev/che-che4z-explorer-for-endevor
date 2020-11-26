@@ -16,33 +16,23 @@
 import * as vscode from 'vscode';
 import { EndevorQualifier } from '../model/IEndevorQualifier';
 import { Repository } from '../model/Repository';
-import { proxyBrowseElement } from '../service/EndevorCliProxy';
-import { logger } from '../globals';
+import { SCHEMA_NAME } from '../constants';
+import { URL } from 'url';
+import { UriQueryParams } from '../ui/tree/EndevorElementDataProvider';
 
 export async function browseElement(arg: any) {
   const repo: Repository = arg.getRepository();
   const elementName: string = arg.label;
   const eq: EndevorQualifier = arg.getQualifier();
-  await vscode.window.withProgress(
-    {
-      location: vscode.ProgressLocation.Notification,
-      title: `Loading: ${elementName}...`,
-    },
-    async (progress) => {
-      progress.report({ increment: 10 });
-      try {
-        const data = await proxyBrowseElement(repo, eq);
-        progress.report({ increment: 50 });
-        const doc = await vscode.workspace.openTextDocument({
-          content: data,
-        });
-        progress.report({ increment: 100 });
-        return vscode.window.showTextDocument(doc, { preview: false });
-      } catch (error) {
-        if (!error.cancelled) {
-          logger.error(error.error);
-        }
-      }
-    }
-  );
+  vscode.window.showTextDocument(buildUri(repo, elementName, eq), {preview: false});
+}
+
+function buildUri(repo: Repository, elementName: string, elementQualifier: EndevorQualifier): vscode.Uri {
+  const endevorHost = new URL(repo.getUrl()).host;
+  return vscode.Uri
+            .parse(SCHEMA_NAME + "://" + endevorHost, true)
+            .with({
+              path: "/" + elementName,
+              query: JSON.stringify(new UriQueryParams(repo, elementQualifier))
+            });
 }
