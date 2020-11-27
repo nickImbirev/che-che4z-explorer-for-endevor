@@ -45,10 +45,10 @@ describe('vs code uri building features', () => {
         const initialUriParams = UriParams.fromElement(elementRepo, elementQualifier);
         const uriQueryValue = JSON.stringify(initialUriParams.getFullQuery());
         const uriMock: vscode.Uri = {
-            scheme: '',
-            authority: '',
+            scheme: 'some_schema',
+            authority: 'some_authority',
             fsPath: '',
-            path: '',
+            path: 'some_path',
             query: uriQueryValue,
             fragment: '',
             with: jest.fn(),
@@ -72,9 +72,9 @@ describe('vs code uri building features', () => {
         assert.equal(actualRepo.getDatasource(), elementRepo.getDatasource());
         assert.equal(actualRepo.getProfileLabel(), elementRepo.getProfileLabel());
 
-        assert.isUndefined(uriParams.getAuthority());
-        assert.isUndefined(uriParams.getPathPart());
-        assert.isUndefined(uriParams.getSchema());
+        assert.equal(uriParams.getAuthority(), uriMock.authority);
+        assert.equal(uriParams.getPathPart(), uriMock.path);
+        assert.equal(uriParams.getSchema(), uriMock.scheme);
     });
 
     it('should be converted into vs code virtual uri', () => {

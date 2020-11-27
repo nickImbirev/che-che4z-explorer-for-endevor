@@ -34,20 +34,20 @@ export function buildUri(uriParams: UriParams): vscode.Uri {
 export function fromUri(uri: vscode.Uri): UriParams {
   const uriQuery: UriQuery = JSON.parse(uri.query);
   logger.trace(`uri query was parsed into: ${JSON.stringify(uriQuery)}`);
-  return UriParams.fromQuery(uriQuery);
+  return UriParams.fromQuery(uri.scheme, uri.authority, uri.path, uriQuery);
 }
 
 export class UriParams {
 
-  private readonly schemaName?: string;
-  private readonly authorityPart?: string;
-  private readonly pathPart?: string;
+  private readonly schemaName: string;
+  private readonly authorityPart: string;
+  private readonly pathPart: string;
 
   private readonly queryPart: UriQuery;
 
   private constructor(
     elementRepo: Repository, elementQualifier: EndevorQualifier,
-    schemaName?: string, endevorHost?: string, elementName?: string) {
+    scheme: string, authority: string, path: string) {
 
     this.queryPart = new UriQuery(
       new QueryRepository(
@@ -56,19 +56,22 @@ export class UriParams {
       ),
       elementQualifier
     );
-    this.schemaName = schemaName;
-    this.pathPart = elementName;
-    this.authorityPart = endevorHost;
+    this.schemaName = scheme;
+    this.pathPart = path;
+    this.authorityPart = authority;
   }
 
-  static fromQuery(fullQuery: UriQuery): UriParams {
+  static fromQuery(scheme: string, authority: string, path: string, fullQuery: UriQuery, ): UriParams {
     const queryRepo: QueryRepository = fullQuery.repository;
     return new UriParams(
       new Repository(
           queryRepo.name, queryRepo.url, queryRepo.username,
           queryRepo.password, queryRepo.datasource, queryRepo.profileLabel
       ),
-      fullQuery.qualifier
+      fullQuery.qualifier,
+      scheme,
+      authority,
+      path
     );
   }
 
@@ -77,7 +80,8 @@ export class UriParams {
       
     return new UriParams(
       elementRepo, elementQualifier,
-      SCHEMA_NAME, new URL(elementRepo.getUrl()).host, elementQualifier.element
+      SCHEMA_NAME, new URL(elementRepo.getUrl()).host,
+      elementQualifier.element!
     );
   }
 
@@ -97,15 +101,15 @@ export class UriParams {
     return this.queryPart.qualifier;
   }
 
-  public getSchema(): string | undefined {
+  public getSchema(): string {
     return this.schemaName;
   }
 
-  public getAuthority(): string | undefined {
+  public getAuthority(): string {
     return this.authorityPart;
   }
 
-  public getPathPart(): string | undefined {
+  public getPathPart(): string {
     return this.pathPart;
   }
 
