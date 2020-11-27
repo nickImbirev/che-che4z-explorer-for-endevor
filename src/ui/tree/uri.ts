@@ -20,21 +20,31 @@ import { EndevorQualifier } from '../../model/IEndevorQualifier';
 import { Repository } from '../../model/Repository';
 
 export function buildUri(uriParams: UriParams): vscode.Uri {
-  const strictMode = true;
-  const builtUri = vscode.Uri
-    .parse(uriParams.getSchema() + "://" + uriParams.getAuthority(), strictMode)
-    .with({
-      path: "/" + uriParams.getPathPart(),
-      query: JSON.stringify(uriParams.getFullQuery())
-    });
-  logger.trace(`uri was built: ${builtUri}`);
-  return builtUri;
+  try {
+    const strictMode = true;
+    const builtUri = vscode.Uri
+      .parse(uriParams.getSchema() + "://" + uriParams.getAuthority(), strictMode)
+      .with({
+        path: "/" + uriParams.getPathPart(),
+        query: JSON.stringify(uriParams.getFullQuery())
+      });
+    logger.trace(`uri was built: ${builtUri}`);
+    return builtUri;
+  } catch(e) {
+    logger.error(e.message);
+    throw new IncorrectUriParamsError(uriParams);
+  }
 }
     
 export function fromUri(uri: vscode.Uri): UriParams {
-  const uriQuery: UriQuery = JSON.parse(uri.query);
-  logger.trace(`uri query was parsed into: ${JSON.stringify(uriQuery)}`);
-  return UriParams.fromQuery(uri.scheme, uri.authority, uri.path, uriQuery);
+  try {
+    const uriQuery: UriQuery = JSON.parse(uri.query);
+    logger.trace(`uri query was parsed into: ${JSON.stringify(uriQuery)}`);
+    return UriParams.fromQuery(uri.scheme, uri.authority, uri.path, uriQuery);
+  } catch(e) {
+    logger.trace(e.message);
+    throw new IncorrectUriError(uri);
+  }
 }
 
 export class UriParams {
@@ -42,47 +52,83 @@ export class UriParams {
   private readonly schemaName: string;
   private readonly authorityPart: string;
   private readonly pathPart: string;
-
   private readonly queryPart: UriQuery;
 
   private constructor(
     elementRepo: Repository, elementQualifier: EndevorQualifier,
     scheme: string, authority: string, path: string) {
-
-    this.queryPart = new UriQuery(
-      new QueryRepository(
-        elementRepo.getName(), elementRepo.getUrl(), elementRepo.getUsername(),
-        elementRepo.getPassword(), elementRepo.getDatasource(), elementRepo.getProfileLabel()
-      ),
-      elementQualifier
-    );
-    this.schemaName = scheme;
-    this.pathPart = path;
-    this.authorityPart = authority;
+    
+    const simpleParamsAreValid = scheme && authority && path;
+    if (simpleParamsAreValid) {
+      this.checkRepo(elementRepo);
+      this.checkQualifier(elementQualifier);
+      this.queryPart = new UriQuery(
+        new QueryRepository(
+          elementRepo.getName(), elementRepo.getUrl(), elementRepo.getUsername(),
+          elementRepo.getPassword(), elementRepo.getDatasource(), elementRepo.getProfileLabel()
+        ),
+        elementQualifier
+      );
+      this.schemaName = scheme;
+      this.pathPart = path;
+      this.authorityPart = authority;
+    } else {
+      throw new Error(`some of important param value(s) is/are missing: ${[scheme, authority, path]}`);
+    }
+  }
+  
+  private checkRepo(repo: Repository): void {
+    const repoIsValid = repo
+                            && repo.getUrl() 
+                            && repo.getUsername()   
+                            && repo.getDatasource() 
+                            && repo.getPassword() 
+                            && repo.getProfileLabel();
+    if (!repoIsValid) {
+      throw new Error(`repository is invalid: ${repo}`);
+    }
   }
 
-  static fromQuery(scheme: string, authority: string, path: string, fullQuery: UriQuery, ): UriParams {
-    const queryRepo: QueryRepository = fullQuery.repository;
-    return new UriParams(
-      new Repository(
+  private checkQualifier(qualifier: EndevorQualifier): void {
+    const qualifierIsValid = qualifier    
+                                    && qualifier.element 
+                                    && qualifier.env
+                                    && qualifier.stage  
+                                    && qualifier.subsystem 
+                                    && qualifier.system 
+                                    && qualifier.type;
+    if (!qualifierIsValid) {
+      throw new Error(`qualifier is invalid: ${qualifier}`);
+    }
+  }
+
+  static fromQuery(scheme: string, authority: string, path: string, fullQuery: UriQuery): UriParams {
+    if (fullQuery) {
+      const queryRepo: QueryRepository = fullQuery.repository;
+      return new UriParams(
+        new Repository(
           queryRepo.name, queryRepo.url, queryRepo.username,
           queryRepo.password, queryRepo.datasource, queryRepo.profileLabel
-      ),
-      fullQuery.qualifier,
-      scheme,
-      authority,
-      path
-    );
+        ),
+        fullQuery.qualifier, scheme, authority, path
+      );
+    } else {
+      throw new Error(`
+        some of important param value(s) is/are missing: ${[fullQuery]}
+      `);
+    }
   }
 
-  public static fromElement(
-      elementRepo: Repository, elementQualifier: EndevorQualifier): UriParams {
-      
-    return new UriParams(
-      elementRepo, elementQualifier,
-      SCHEMA_NAME, new URL(elementRepo.getUrl()).host,
-      elementQualifier.element!
-    );
+  public static fromElement(elementRepo: Repository, elementQualifier: EndevorQualifier): UriParams {
+    const paramsArePresented = elementRepo && elementQualifier;
+    if (paramsArePresented) {
+      const elementName = elementQualifier.element;
+      const repoUrl = elementRepo.getUrl();
+      if (elementName && repoUrl) {
+        return new UriParams(elementRepo, elementQualifier, SCHEMA_NAME, new URL(repoUrl).host, elementName);
+      }
+    }
+    throw new Error(`repository or qualifier missing values: ${[elementRepo, elementQualifier]}`);
   }
 
   public getRepository(): Repository {
@@ -155,5 +201,12 @@ export class IncorrectUriError extends Error {
   constructor(uri: vscode.Uri) {
     super(`such uri cannot be parsed: ${uri}`);
     this.name = "IncorrectUriError";
+  }
+}
+
+export class IncorrectUriParamsError extends Error {
+  constructor(uriParams: UriParams) {
+    super(`such uri params cannot be converted into uri: ${JSON.stringify(uriParams)}`);
+    this.name = "IncorrectUriParamsError";
   }
 }
