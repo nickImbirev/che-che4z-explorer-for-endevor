@@ -13,8 +13,10 @@
  */
 
 import * as vscode from 'vscode';
+import { logger } from '../globals';
 
 export async function browseElement(uri: vscode.Uri) {
   const keepExistingEditorTabs = { preview: false };
   vscode.window.showTextDocument(uri, keepExistingEditorTabs);
+  logger.info(`browse command submitted to content provider with uri: ${uri}`);
 }

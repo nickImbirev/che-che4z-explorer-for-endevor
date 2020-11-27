@@ -13,6 +13,7 @@
  */
 
 import * as vscode from 'vscode';
+import { logger } from '../../globals';
 import { proxyBrowseElement } from '../../service/EndevorCliProxy';
 import { fromUri, UriParams } from './uri';
 
@@ -21,7 +22,8 @@ export class EndevorElementDataProvider implements vscode.TextDocumentContentPro
   provideTextDocumentContent(uri: vscode.Uri, _token: vscode.CancellationToken
                                                               ): vscode.ProviderResult<string> {
 
-    const uriParts: UriParams = fromUri(uri);                                                       
+    const uriParts: UriParams = fromUri(uri);   
+    logger.trace(`browse element action with uri: ${uri} will be submitted to Endevor`);                                                    
     return proxyBrowseElement(uriParts.getRepository(), uriParts.getQualifier());
   }
 }

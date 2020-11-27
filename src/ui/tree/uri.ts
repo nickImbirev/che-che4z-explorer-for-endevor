@@ -15,21 +15,25 @@
 import { URL } from 'url';
 import * as vscode from 'vscode';
 import { SCHEMA_NAME } from '../../constants';
+import { logger } from '../../globals';
 import { EndevorQualifier } from '../../model/IEndevorQualifier';
 import { Repository } from '../../model/Repository';
 
 export function buildUri(uriParams: UriParams): vscode.Uri {
   const strictMode = true;
-  return vscode.Uri
+  const builtUri = vscode.Uri
     .parse(uriParams.getSchema() + "://" + uriParams.getAuthority(), strictMode)
     .with({
       path: "/" + uriParams.getPathPart(),
       query: JSON.stringify(uriParams.getFullQuery())
     });
+  logger.trace(`uri was built: ${builtUri}`);
+  return builtUri;
 }
     
 export function fromUri(uri: vscode.Uri): UriParams {
   const uriQuery: UriQuery = JSON.parse(uri.query);
+  logger.trace(`uri query was parsed into: ${JSON.stringify(uriQuery)}`);
   return UriParams.fromQuery(uriQuery);
 }
 
