@@ -15,6 +15,7 @@
 import { assert } from 'chai';
 import * as vscode from 'vscode';
 import { Commands } from '../../../../commands/Common';
+import { logger } from '../../../../globals';
 import { EndevorEntity } from '../../../../model/EndevorEntity';
 import { EndevorQualifier } from '../../../../model/IEndevorQualifier';
 import { Repository } from '../../../../model/Repository';
@@ -75,4 +76,21 @@ describe('Endevor element nodes use cases', () => {
     assert.equal(actualOnClickCommand?.command, Commands.BrowseElement);
     assert.equal(actualOnClickCommand?.arguments?.pop(), expectedUri);
   });
+
+  it('it will show the error message, if something went wrong with building uri', () => {
+    // given
+    const expectedErrorReason = "something went wrong!";
+    jest.spyOn(uri, 'buildUri').mockImplementation((uriParams: uri.UriParams) => {
+      throw new Error(expectedErrorReason);
+    });
+    jest.spyOn(logger, "error").mockImplementation((message: string) => {
+      // do nothing
+    });
+    // when
+    new EndevorElementNode(endevorEntity, endevorQualifier);
+    // then
+    expect(logger.error).toHaveBeenCalledWith(expectedErrorReason);
+    const expectedUserMessage = "You cannot browse this element, because of vs code uri is broken!";
+    expect(logger.error).toHaveBeenLastCalledWith(expectedUserMessage);
+  })
 });

@@ -377,7 +377,16 @@ export class EndevorElementNode extends EndevorNode {
     this.command = {
       title: 'Browse element',
       command: Commands.BrowseElement,
-      arguments: [buildUri(UriParams.fromElement(this.getRepository(), this.getQualifier()))]
+      arguments: [this.buildUri()]
+    }
+  }
+
+  private buildUri(): vscode.Uri {
+    try {
+      return buildUri(UriParams.fromElement(this.getRepository(), this.getQualifier()));
+    } catch(e) {
+      logger.error(e.message);
+      logger.error("You cannot browse this element, because of vs code uri is broken!");
     }
   }
 
