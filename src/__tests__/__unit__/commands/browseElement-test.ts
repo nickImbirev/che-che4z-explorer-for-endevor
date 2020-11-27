@@ -35,7 +35,7 @@ describe('process for submitting browse element command', () => {
         // when
         await browseElement(uriMock);
         // then
-        const inActiveWorkspace = { preview: false };
-        expect(vscode.window.showTextDocument).toHaveBeenCalledWith(uriMock, inActiveWorkspace);
+        const keepExistingEditorTabs = { preview: false };
+        expect(vscode.window.showTextDocument).toHaveBeenCalledWith(uriMock, keepExistingEditorTabs);
     });
 });

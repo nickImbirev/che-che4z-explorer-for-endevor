@@ -377,9 +377,7 @@ export class EndevorElementNode extends EndevorNode {
     this.command = {
       title: 'Browse element',
       command: Commands.BrowseElement,
-      arguments: [buildUri(
-        UriParams.fromElement(this.getRepository(), this.getQualifier())
-      )]
+      arguments: [buildUri(UriParams.fromElement(this.getRepository(), this.getQualifier()))]
     }
   }
 

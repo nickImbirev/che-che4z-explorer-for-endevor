@@ -48,7 +48,16 @@ describe('Test function retrieveWithDependencies (retrieve element with dependen
   });
 
   // mock vscode Uri utility
-  const expectedUri: any = undefined;
+  const expectedUri: vscode.Uri = {
+    scheme: '',
+    authority: '',
+    fsPath: '',
+    path: '',
+    query: '',
+    fragment: '',
+    with: jest.fn(),
+    toJSON: jest.fn()
+  };
   jest.spyOn(uri, 'buildUri').mockReturnValue(expectedUri);
 
   // Mock the elements, nodes, and repo

@@ -19,8 +19,9 @@ import { EndevorQualifier } from '../../model/IEndevorQualifier';
 import { Repository } from '../../model/Repository';
 
 export function buildUri(uriParams: UriParams): vscode.Uri {
+  const strictMode = true;
   return vscode.Uri
-    .parse(uriParams.getSchema() + "://" + uriParams.getAuthority(), true)
+    .parse(uriParams.getSchema() + "://" + uriParams.getAuthority(), strictMode)
     .with({
       path: "/" + uriParams.getPathPart(),
       query: JSON.stringify(uriParams.getFullQuery())
@@ -28,8 +29,8 @@ export function buildUri(uriParams: UriParams): vscode.Uri {
 }
     
 export function fromUri(uri: vscode.Uri): UriParams {
-  const queryPart: UriQuery = JSON.parse(uri.query);
-  return UriParams.fromQuery(queryPart);
+  const uriQuery: UriQuery = JSON.parse(uri.query);
+  return UriParams.fromQuery(uriQuery);
 }
 
 export class UriParams {
@@ -68,8 +69,7 @@ export class UriParams {
   }
 
   public static fromElement(
-      elementRepo: Repository, elementQualifier: EndevorQualifier
-                                                          ): UriParams {
+      elementRepo: Repository, elementQualifier: EndevorQualifier): UriParams {
       
     return new UriParams(
       elementRepo, elementQualifier,
@@ -111,6 +111,7 @@ export class UriParams {
 }
 
 class UriQuery {
+  
  readonly repository: QueryRepository;
  readonly qualifier: EndevorQualifier;
 
@@ -132,6 +133,7 @@ class QueryRepository {
   constructor(
       name: string, url: string, username: string | undefined,
       password: string | undefined, datasourse: string, profileLabel: string | undefined) {
+
     this.name = name;
     this.url = url;
     this.username = username;

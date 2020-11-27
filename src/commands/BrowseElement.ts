@@ -15,5 +15,6 @@
 import * as vscode from 'vscode';
 
 export async function browseElement(uri: vscode.Uri) {
-  vscode.window.showTextDocument(uri, {preview: false});
+  const keepExistingEditorTabs = { preview: false };
+  vscode.window.showTextDocument(uri, keepExistingEditorTabs);
 }

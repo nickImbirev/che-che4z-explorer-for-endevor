@@ -42,9 +42,8 @@ describe('vs code uri building features', () => {
     };
     it('should be parsed from uri to domain object', () => {
         // given
-        const uriQueryValue = 
-                    JSON.stringify(UriParams.fromElement(elementRepo, elementQualifier).getFullQuery());
-        // here we need to create uri explicitly to avoid strange mock behaviour
+        const initialUriParams = UriParams.fromElement(elementRepo, elementQualifier);
+        const uriQueryValue = JSON.stringify(initialUriParams.getFullQuery());
         const uriMock: vscode.Uri = {
             scheme: '',
             authority: '',
@@ -83,7 +82,6 @@ describe('vs code uri building features', () => {
         const initialParams: UriParams = UriParams.fromElement(elementRepo, elementQualifier);
         const withFunction = jest.fn();
         const parseFunction = jest.fn();
-        // here we need to create uri explicitly to avoid strange mock behaviour
         const uriMock: vscode.Uri = {
             scheme: '',
             authority: '',
