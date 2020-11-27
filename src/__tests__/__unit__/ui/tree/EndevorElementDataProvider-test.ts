@@ -17,9 +17,10 @@ import { EndevorQualifier } from '../../../../model/IEndevorQualifier';
 import { Repository } from '../../../../model/Repository';
 import { EndevorElementDataProvider } from '../../../../ui/tree/EndevorElementDataProvider';
 import * as uri from '../../../../ui/tree/uri';
-import { UriParams } from '../../../../ui/tree/uri';
+import { IncorrectUriError, UriParams } from '../../../../ui/tree/uri';
 import * as cliProxy from '../../../../service/EndevorCliProxy';
 import { assert } from 'chai';
+import { logger } from '../../../../globals';
 // Explicitly show NodeJS how to find VSCode (required for Jest)
 process.vscode = vscode;
 
@@ -60,13 +61,65 @@ describe('element data provider document fetching', () => {
         const expectedDocumentContent = 'very important text';
         jest.spyOn(cliProxy, 'proxyBrowseElement').mockImplementation((_repo, _qualifier) => {
             return Promise.resolve(expectedDocumentContent);
-        })
+        });
         // when
         const providerResult = await new EndevorElementDataProvider()
-                .provideTextDocumentContent(uriMock, cancellationToken)
+                .provideTextDocumentContent(uriMock, cancellationToken);
         // then
         expect(uri.fromUri).toHaveBeenCalledWith(uriMock);
         expect(cliProxy.proxyBrowseElement).toHaveBeenLastCalledWith(elementRepo, elementQualifier);
         assert.equal(providerResult, expectedDocumentContent);
+    });
+
+    it('should show error message if incorrect uri came', () => {
+        // given
+        jest.spyOn(uri, 'fromUri').mockImplementation((uri: vscode.Uri) => {
+            throw new IncorrectUriError(uri);
+        });
+        jest.spyOn(logger, 'error').mockImplementation((_message: string) => {
+            // do nothing
+        });
+        // when
+        new EndevorElementDataProvider().provideTextDocumentContent(uriMock, cancellationToken);
+        // then
+        expect(uri.fromUri).toHaveBeenCalledWith(uriMock);
+        expect(logger.error).toHaveBeenCalledTimes(1);
+    });
+
+    it('should show error message if something went wrong in general', () => {
+        // given
+        const errorReason = 'really huge mistake';
+        jest.spyOn(uri, 'fromUri').mockImplementation((uri: vscode.Uri) => {
+            throw new Error(errorReason);
+        });
+        jest.spyOn(logger, 'error').mockImplementation((_message: string) => {
+            // do nothing
+        });
+        // when
+        new EndevorElementDataProvider().provideTextDocumentContent(uriMock, cancellationToken);
+        // then
+        expect(uri.fromUri).toHaveBeenCalledWith(uriMock);
+        expect(logger.error).toHaveBeenLastCalledWith(`something went wrong: ${errorReason}`);
+    });
+
+    it('should show error message if something went wrong with Endevor cli proxy call', async () => {
+        // given
+        jest.spyOn(uri, 'fromUri').mockImplementation((_uri: vscode.Uri) => uriParams);
+        const errorReason = 'Endevor not answered';
+        jest.spyOn(cliProxy, 'proxyBrowseElement').mockImplementation((_repo, _qualifier) => {
+            return Promise.reject(errorReason);
+        });
+        jest.spyOn(logger, 'error').mockImplementation((_message: string) => {
+            // do nothing
+        });
+        // when
+        assert.isUndefined(
+            await new EndevorElementDataProvider()
+                        .provideTextDocumentContent(uriMock, cancellationToken)
+        );
+        // then
+        expect(uri.fromUri).toHaveBeenCalledWith(uriMock);
+        expect(cliProxy.proxyBrowseElement).toHaveBeenLastCalledWith(elementRepo, elementQualifier);
+        expect(logger.error).toHaveBeenCalledWith(errorReason);
     });
 });

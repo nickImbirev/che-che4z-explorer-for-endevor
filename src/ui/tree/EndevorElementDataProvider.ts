@@ -15,15 +15,27 @@
 import * as vscode from 'vscode';
 import { logger } from '../../globals';
 import { proxyBrowseElement } from '../../service/EndevorCliProxy';
-import { fromUri, UriParams } from './uri';
+import { fromUri, IncorrectUriError, UriParams } from './uri';
 
 export class EndevorElementDataProvider implements vscode.TextDocumentContentProvider {
 
   provideTextDocumentContent(uri: vscode.Uri, _token: vscode.CancellationToken
                                                               ): vscode.ProviderResult<string> {
 
-    const uriParts: UriParams = fromUri(uri);   
-    logger.trace(`browse element action with uri: ${uri} will be submitted to Endevor`);                                                    
-    return proxyBrowseElement(uriParts.getRepository(), uriParts.getQualifier());
+    try {
+      const uriParts: UriParams = fromUri(uri);   
+      logger.trace(`browse element action with uri: ${uri} will be submitted to Endevor`);                                                    
+      return proxyBrowseElement(uriParts.getRepository(), uriParts.getQualifier())
+                .catch((reason: any) => {
+                        logger.error(reason);
+                        return Promise.resolve(undefined);
+                });
+    } catch(e) {
+      if (e instanceof IncorrectUriError) {
+        logger.error(e.message);
+      } else {
+        logger.error(`something went wrong: ${e.message}`);
+      }
+    }
   }
 }

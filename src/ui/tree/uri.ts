@@ -150,3 +150,10 @@ class QueryRepository {
     this.profileLabel = profileLabel;
   }
 }
+
+export class IncorrectUriError extends Error {
+  constructor(uri: vscode.Uri) {
+    super(`such uri cannot be parsed: ${uri}`);
+    this.name = "IncorrectUriError";
+  }
+}
