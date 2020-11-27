@@ -17,6 +17,10 @@ import { logger } from '../globals';
 
 export async function browseElement(uri: vscode.Uri) {
   const keepExistingEditorTabs = { preview: false };
-  vscode.window.showTextDocument(uri, keepExistingEditorTabs);
+  vscode.window.showTextDocument(uri, keepExistingEditorTabs)
+                .then(
+                  (_value: vscode.TextEditor) => {},
+                  (reason: any) => logger.error(reason)
+                )
   logger.info(`browse command submitted to content provider with uri: ${uri}`);
 }

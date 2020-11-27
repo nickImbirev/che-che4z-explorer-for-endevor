@@ -14,11 +14,27 @@
 
 import * as vscode from 'vscode';
 import { browseElement } from '../../../commands/BrowseElement';
+import { logger } from '../../../globals';
 
 // Explicitly show NodeJS how to find VSCode (required for Jest)
 process.vscode = vscode;
 
 describe('process for submitting browse element command', () => {
+    // output stubs
+    const anyValue: any = undefined;
+    const mockEditor: vscode.TextEditor = {
+        document: anyValue,
+        selection: anyValue,
+        selections: anyValue,
+        visibleRanges: anyValue,
+        options: anyValue,
+        edit: anyValue,
+        insertSnippet: anyValue,
+        show: anyValue,
+        hide: anyValue,
+        revealRange: anyValue,
+        setDecorations: anyValue
+    };
     it('should submit uri request to content provider', async () => {
         // given
         const uriMock: vscode.Uri = {
@@ -31,11 +47,38 @@ describe('process for submitting browse element command', () => {
             with: jest.fn(),
             toJSON: jest.fn()
         };
-        vscode.window.showTextDocument = jest.fn();
+        jest.spyOn(vscode.window, 'showTextDocument').mockImplementation((_uri: vscode.Uri, _options?: vscode.TextDocumentShowOptions | undefined) => {
+            return Promise.resolve(mockEditor);
+        });
         // when
         await browseElement(uriMock);
         // then
         const keepExistingEditorTabs = { preview: false };
         expect(vscode.window.showTextDocument).toHaveBeenCalledWith(uriMock, keepExistingEditorTabs);
     });
+
+    it('should show the error message, when something went wrong with browse command submission', async () => {
+        // given
+        const uriMock: vscode.Uri = {
+            scheme: 'some_scheme',
+            authority: 'some_authority',
+            fsPath: '/path',
+            path: '/path',
+            query: 'some_value',
+            fragment: 'very_important_fragment',
+            with: jest.fn(),
+            toJSON: jest.fn()
+        };
+        const browseRejectReason = "something went really wrong, dude!";
+        jest.spyOn(vscode.window, 'showTextDocument').mockImplementation((_uri: vscode.Uri, _options?: vscode.TextDocumentShowOptions | undefined) => {
+            return Promise.reject(browseRejectReason);
+        });
+        jest.spyOn(logger, "error").mockImplementation((_message: string) => {
+            // do nothing
+        }) 
+        // when
+        await browseElement(uriMock);
+        // then
+        expect(logger.error).toHaveBeenCalledWith(browseRejectReason);
+    })
 });
